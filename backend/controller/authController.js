@@ -1,47 +1,42 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const cloudinary = require('../config/cloudinary');
 // Import bcrypt for password encryption
 
 // User signup
+
 const signup = async (req, res) => {
-  const { name, email, profession, password } = req.body;
-
-  // Check if all fields are provided
-  if (!name || !email || !profession || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
   try {
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already in use" });
+    const { name, email, profession, password } = req.body;
+
+    // Check for required fields
+    if (!name || !email || !profession || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // // Hash the password before saving
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    // Upload image to Cloudinary
+    let imageUrl = null;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'profile_images', // Optional folder in Cloudinary
+      });
+      imageUrl = result.secure_url;
+    }
 
-    // Create new user
-    const user = new User({
+    // Create the user
+    const newUser = new User({
       name,
       email,
       profession,
-      password,
+      password, // Hash the password before saving in production
+      imageUrl,
     });
 
-    // Save user to database
-    await user.save();
-
-    // Create a JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h", // Token expires in 1 hour
-    });
-
-    // Respond with success and token
-    res.status(201).json({ message: "User registered successfully", token });
+    await newUser.save();
+    res.status(201).json({ message: 'User created successfully', user: newUser });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error. Please try again." });
+    console.error('Error during signup:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

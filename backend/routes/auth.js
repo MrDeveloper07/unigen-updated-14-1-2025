@@ -1,21 +1,21 @@
 const express = require("express");
+const upload = require('../config/multer');
 const { signup, login } = require("../controller/authController");
 const verifyToken = require("../middleware/verifyToken");
 const router = express.Router();
-const User = require("../models/User"); // Adjust the path as needed
+const User = require("../models/User"); 
 
-// Route for user signup
-router.post("/signup", signup);
+router.post('/signup', upload.single('image'), signup);
 
-// Route for user login
+
 router.post("/login", login);
 
-// Route to get user details
+
 router.get("/me", verifyToken, async (req, res) => {
   try {
     console.log("Decoded user:", req.user); // Debugging
-    const user = await User.findById(req.user.userId).select("name email profession");
-    console.log(user); // Use req.user.userId
+    const user = await User.findById(req.user.userId).select("name email profession image");
+    console.log(user); 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
-
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   profession: { type: String, required: true },
   password: { type: String, required: true },
+  imageUrl: { type: String }, // Store the Cloudinary URL
 });
 
-const User = mongoose.model('User', userSchema); // Use 'users' as the collection name.
-
+const User = mongoose.model('User', userSchema);
 module.exports = User;
